@@ -1,8 +1,8 @@
-﻿<#
+<#
     .SYNOPSIS
-    Manages Emby Server
+    Emby Server Management Script
 
-    .DESCRIPTION
+     .DESCRIPTION
     Installs and Updates Emby Server on Windows with IIS Reverse Proxy and SSL Certificate via Certify the Web.
 
     .PARAMETER InstallationPath
@@ -18,19 +18,22 @@
     User to run Emby-Server as.
 
     .PARAMETER ServiceAccountSecret
-    Password for the account to run Emby-Server As
+    > Password for the account to run Emby-Server As, Do not supply if using -CreateServiceAccount
 
     .PARAMETER CreateServiceAccount
     Superceeds ServiceAccountSecret. Creates a new service account and generates password which will be logged to the console.
+
+    .PARAMETER CertificateContactName
+    Name to use with certiify the web client as contact on certificate
+
+    .PARAMETER CertificateContactEmail
+    Email to use with certify the web as contact on certificate
 
     .PARAMETER ExternalHostName
     Hostname to configure reverse proxy to listen on
 
     .PARAMETER RestartIfNeeded
     Tells the script to restart the system if needed when installing IIS.
-
-    .PARAMETER CreateModificationsDirectory
-    Creates a /modifications directory in the installation path.
 
     .PARAMETER Beta
     Configures with latest beta version instead of latest stable.
@@ -41,17 +44,17 @@
     .EXAMPLE
     .\Manage-EmbyServer.ps1 -Install -CreateServiceAccount -CertificateContactName "Admin" -CertificateContactEmal "admin@example.com" -ExternalHostName "media.example.com"
 
-    Installs latest version and creates a service account with the default options. IIS is confgured and certify the web client is used to create and maintain SSL certificat
+    Installs latest version and creates a service account with the default options. IIS is confgured and certify the web client is used to create and maintain SSL certificate
 
     .EXAMPLE
     .\Manage-EmbyServer.ps1 -Install -InstallationPath "F:\EmbyServer" -CreateServiceAccount -CertificateContactName "Admin" -CertificateContactEmal "admin@example.com" -ExternalHostName "media.example.com"
 
-    Installs latest version and creates a service account with custom path and default options.  IIS is confgured and certify the web client is used to create and maintain SSL certificat
+    Installs latest version and creates a service account with custom path and default options.  IIS is confgured and certify the web client is used to create and maintain SSL certificate
 
     .EXAMPLE
     .\Manage-EmbyServer.ps1 -Install -Beta -InstallationPath "F:\EmbyServer" -CreateServiceAccount -CertificateContactName "Admin" -CertificateContactEmal "admin@example.com" -ExternalHostName "media.example.com"
 
-    Installs latest beta version and creates a service account with custom path and default options.  IIS is confgured and certify the web client is used to create and maintain SSL certificat
+    Installs latest beta version and creates a service account with custom path and default options.  IIS is confgured and certify the web client is used to create and maintain SSL certificate
 
     .EXAMPLE
     .\Manage-EmbyServer.ps1 -Update
@@ -79,14 +82,17 @@
     Updates Emby Server to the latest beta version using a custom path
 
     .NOTES
-    Written By: Ben (TheITJedi)
-    Version: 0.1
-
+    AUTHOR Ben (TheITJedi)
+    VERSION 0.1
+    GUID 849a4b01-d245-4a14-b682-b5c0fdaf0b09
+    RELEASENOTES
+    This script comes with no warranties. It should work properly, but use at your own risk.
 #>
 
 <### Requires ###>
 
 #Requires -RunAsAdministrator
+
 
 <### Parameters ###>
 [CmdletBinding()]
@@ -156,7 +162,6 @@ param (
     [switch]
     $Beta
 )
-
 
 <### Functions ###>
 Function Format-String
@@ -1531,8 +1536,8 @@ If ($Update.IsPresent)
 # SIG # Begin signature block
 # MIIgBgYJKoZIhvcNAQcCoIIf9zCCH/MCAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDVgugvKDyXsJC2
-# 3vq6m3da5ZBdC1d0Wc05q5HLdiD2ZaCCGiUwggWNMIIEdaADAgECAhAOmxiO+dAt
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCC3b09mhtTpFsxN
+# uZMDg/1WnESuEhp+5IKuDa0+vzorIKCCGiUwggWNMIIEdaADAgECAhAOmxiO+dAt
 # 5+/bUOIIQBhaMA0GCSqGSIb3DQEBDAUAMGUxCzAJBgNVBAYTAlVTMRUwEwYDVQQK
 # EwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xJDAiBgNV
 # BAMTG0RpZ2lDZXJ0IEFzc3VyZWQgSUQgUm9vdCBDQTAeFw0yMjA4MDEwMDAwMDBa
@@ -1676,28 +1681,28 @@ If ($Update.IsPresent)
 # ARkWB2ZlbHRvbnMxGzAZBgNVBAMTEkZlbHRvbnMuTWUgUm9vdCBDQQITQQAAAHEf
 # mpXWr8phQwAAAAAAcTANBglghkgBZQMEAgEFAKCBhDAYBgorBgEEAYI3AgEMMQow
 # CKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQBgjcC
-# AQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3DQEJBDEiBCByqzka5U0aypCR9jLR
-# oAG0i+OzJ6UbXij49HL/lXUIaDANBgkqhkiG9w0BAQEFAASCAQBFMNutIg2XehZj
-# ASeT2xqVs4yEOPuZpAFXs4lNoja8k/I3EnWKkmwlQOmKi2t/xWX2fUTI8yX6aNLy
-# YvkfH7d0sxzFuCXYGbQT9yUoFF+GIQx2765Y3ZH1wKJc12FKAqsdEgZ7hSRCc5cI
-# tgN1yEe7mL3g8+wmzx2bmWlOckNjZRGonZuMNYD5uiWugyRNn2Oh/4Lg6OhiC2ip
-# 1Lydx2mJw9aRsYBluYFZK4+zp5EfHWN/NgeEz0/iJITTRyt+9w7Edr47t1zX2rnH
-# A2Iu/YsnJd6kClY2pB4MLOAaNchU5GSwKjhlTJNWf684lggyN6Sel/SN9P5oaoU2
-# 7pITOMvfoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJAgEBMHcwYzELMAkGA1UE
+# AQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3DQEJBDEiBCAkTSVmhMJjg6/jrOEf
+# 3VWn1DH75gz3x/S8jpYPHankyTANBgkqhkiG9w0BAQEFAASCAQAPVcWHj5u9B0CN
+# 0HIAompyaJSr4dndYintx0FOKrTMRJVPfRi0aYtRgh0eZ2Fnm8PBoYBJPeTSt/uG
+# WZ1PTI9LSdjzwIjejGkMjsYUR3eKR9qN0RuB+hxjdlA8Oj+8Agc3TzFjUHfZs7K3
+# GmlxNmHAbOYDqdcpr9DqmqK23x5UMT9TVbVOoXZMicUh7l40Y9WyDd54qoydWcyA
+# baag9culxe66EVe0iw3wXJihSpVssVCjiIL5ddFO9QsX76qkkttQ51bys2F5211x
+# HjKvsYaKTGZbRBSjvy6O4TGzgElxUUbKMrd1uF8HEJzmO/Oa3uWEdwz0BmwUL0Sh
+# lTsj++MzoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJAgEBMHcwYzELMAkGA1UE
 # BhMCVVMxFzAVBgNVBAoTDkRpZ2lDZXJ0LCBJbmMuMTswOQYDVQQDEzJEaWdpQ2Vy
 # dCBUcnVzdGVkIEc0IFJTQTQwOTYgU0hBMjU2IFRpbWVTdGFtcGluZyBDQQIQBUSv
 # 85SdCDmmv9s/X+VhFjANBglghkgBZQMEAgEFAKBpMBgGCSqGSIb3DQEJAzELBgkq
-# hkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDgxODA1NTkwOFowLwYJKoZIhvcN
-# AQkEMSIEIH8wlA975rzimICRybK0uIJrhoKjB0Kfn5GflAsk2OmKMA0GCSqGSIb3
-# DQEBAQUABIICAEve2zUSKmqSF47NAJy28PwZhTvd9fJIjBJWDdasNscXfvrfsY3p
-# u/3QY87GT6JHs8wZ048R5UKBavFYmVgMnwer1QXrVYUoctP+FN9JfljtWI5UhNpu
-# l7ORmBgnft1fl6QqK8WrTNZG4m5+HkyXSgU0O+BovjX7vAqmBQqEDL1LDbox8GZ3
-# W39y+WeuloCR3QSbqHD/X/W4wBjFByYurlXZjF3JDcWI5WQ6FSR0MO1kZ+RXdoE7
-# lhcWd1dlKCV2t+SsJZJZvb7/tWTXWII5OfV+ZgEZUEr34W0N7iBLqa4I4AumiNjO
-# +C+9+bfsd58RyhAhw61QTfFBcSllQa5Vi7S2tE2xJoOXhPu15HHFnCwv8koA4VHY
-# Z+d/CnaE+KOXEHsjfnyhZaV7l6s7H3Q7Oad51FsDYZC8alBGgTtXMgUVKl4yTj7u
-# 0GbVZ2gDOvPftmxY8ucyXCl29TotEEMVAR7UV55LXREd1zVXwqFAmADekZ7IbgRq
-# 1GByXSn31hn/m//a37vKrw+iQOn9+RLCzuWeGL6M11l6QGb3tseglk3ZLzI/bOQ5
-# k406RzYSay3QagIdg/XIBPzvXIjsx7AwFWMNpeoTt8PPStPO6O5GyjtSnvUteI0p
-# aL5cOUoOeR2UorVBjeGjvOyZgT1UWZHtEHmprliUFKcZjR2FuwTCqYQ0
+# hkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDgxODA2NTEyOVowLwYJKoZIhvcN
+# AQkEMSIEIFho6qUKQnUiVpDsgZMKoQj3rYwtRYWmfX9C317+bI1IMA0GCSqGSIb3
+# DQEBAQUABIICAFSGFJbSmhB2j3uQIV79bzGpX6JHNc5mQGxLAwPdO9oRQP9PKpjq
+# Hw40CQ2G4H0jVuQbIkVdgnunLC3v4uHy+kYAsdDfqDk3mLInA4LW+B45lCP9VWEu
+# S4XbfEvq9hm2YtdfsoLEE8sktucWWb1DrVQbvzVqKvk0NBLOci5kf9F31/p2epKa
+# 0yyp9Mp45d8UmSU+93qCnbiC3xd5/y5PkCn4vPryPYEk2+QqOedP3mk1h+rgcSoO
+# aZVn1fqChe9GQCHEGdxTwFDCQFRFaBoTJBT1cVZgz+IstUbpllzpvN6r6XUvr903
+# LS7b7n0nNx4jhfInsibfzFuRPhsfqdmnFkk31PGz6QDyQi7qVfZU7nAAIapbpveA
+# 5UNNhxXjFY+lF2SWtDWVpJ1tiMy0LxIA7uNKTvXq4SSlh7+QbMQDsvXfKuvsEsND
+# UaZ7VHEGMavvlzGGLHNszn0715xGfa632y6attGnSWrB01TqmswurZi9GwkwvxyV
+# Py/3sE7T46W+XOt6cvq6PMQyaUJv4Y0ZVnHpduEr0K+4t/oM134qLmkcHbXnJwIc
+# 6ALqQDHULdFk/HWyipKbuufqniz56Bj6RyUT3OYxPVNZMahAb6yfygzpqg1KSu3E
+# Cperks5uFAgWRQtYz93f/CXpwQhmacipBUuJXdR5JlLaacpGmJGh5miW
 # SIG # End signature block
