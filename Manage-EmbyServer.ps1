@@ -5,6 +5,37 @@
      .DESCRIPTION
     Installs and Updates Emby Server on Windows with IIS Reverse Proxy and SSL Certificate via Certify the Web.
 
+    What it does:
+    - Checks if installation path exists, if not, creates it.
+    - Checks if 7-Zip is installed (needed to extract .7z archives of Emby Server), if its not present, it will get the latest version and install it.
+    - Checks for NSSM in installation path, if not found, fetches it and gets it where it needs to be.
+    - Checks if Visual C++ 2015-2022 Redistributable Runtime is installed, if not it gets latest version and installs it.
+    - Checks if IIS is installed, if not, installs it and relevant features.
+    - Checks if IIS Rewrite2 Module is installed, if not, it downloads and installs it.
+    - Checks if IIS AAR3.0 Module is installed, if not, it downloads and installs it.
+    - Checks if Certify The Web client is installed, if not it downloads and installs it.
+    - Downloads latest .7z x64 version of Emby Server (will download latest beta if `-beta` is specified) and extracts it.
+    - Creates a local user to use as a service account to run Emby Server.
+    - Configures Emby Server to run as a service via NSSM.
+    - Configures Windows Firewall rule to allow TCP port `80` and `443` in and UDP `443` in (For TLS1.3/QUIC support).
+    - Stops the default IIS website.
+    - Creates a new `Emby Server Reverese Proxy` site.
+    - Configures IIS WebServer farm in AAR3.0.
+    - Configures IIS server variables.
+    - Disables IIS caching (causes weirdness with streaming).
+    - Configures IIS request filtering.
+    - Configures IIS headers.
+    - Configures rewrite/reverse proxy rules.
+    - Configures Certify the Web client to create and maintain SSL certificate.
+    - Disables OCSP stapling.
+    - Disables legacy TLS.
+    - Configures QUICK protocol and TLS 1.3 (if Windows Server 2022 or newer).
+    - Starts Emby Server as a Service.
+    - Launches Emby Server WebUI in the default system browser.
+    - Outputs credentials of created service account.
+
+    The script can also be used to update Emby Server when new versions are available.
+
     .PARAMETER InstallationPath
     Path to install Emby-Server to.
 
@@ -1498,6 +1529,20 @@ If ($Install.IsPresent)
         Write-Error "An error occurred: $_"
     }
 
+    Try
+    {   Write-Host "$($InformationSlug) Starting Emby Server"
+        Start-Service -Name $ServiceName
+        Write-Host "$($SuccessSlug) Emby Server is running."
+    }
+    Catch
+    {
+        Write-Host "$($ErrorSlug) Failed to start Emby Server service."
+        Write-Error "An error occurred: $_"
+    }
+
+    Write-Host "Launching Emby in default browser."
+    Start-Process "https://$($ExternalHostName)"
+
     If ($CreateServiceAccount.IsPresent)
     {
         Write-Host "$($InformationSlug) Service Account Information. `r`n`r`n`t`t$(Format-String -Italic -Color GoldenRod '*** SAVE FOR LATER ***')"
@@ -1536,8 +1581,8 @@ If ($Update.IsPresent)
 # SIG # Begin signature block
 # MIIgBgYJKoZIhvcNAQcCoIIf9zCCH/MCAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCwE56bYZcrEviV
-# VvNLCnrEY4Y7Hg/T1Y6X59DZT78UbaCCGiUwggWNMIIEdaADAgECAhAOmxiO+dAt
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCAQOiGlkFKrw6++
+# VQyFy6MfqDAltRsg0jyyFeYPEU1ikqCCGiUwggWNMIIEdaADAgECAhAOmxiO+dAt
 # 5+/bUOIIQBhaMA0GCSqGSIb3DQEBDAUAMGUxCzAJBgNVBAYTAlVTMRUwEwYDVQQK
 # EwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xJDAiBgNV
 # BAMTG0RpZ2lDZXJ0IEFzc3VyZWQgSUQgUm9vdCBDQTAeFw0yMjA4MDEwMDAwMDBa
@@ -1681,28 +1726,28 @@ If ($Update.IsPresent)
 # ARkWB2ZlbHRvbnMxGzAZBgNVBAMTEkZlbHRvbnMuTWUgUm9vdCBDQQITQQAAAHEf
 # mpXWr8phQwAAAAAAcTANBglghkgBZQMEAgEFAKCBhDAYBgorBgEEAYI3AgEMMQow
 # CKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQBgjcC
-# AQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3DQEJBDEiBCCmNENiTQFt1AbapAsL
-# QgKKQJXgrkUxcH97AK11nehXXTANBgkqhkiG9w0BAQEFAASCAQAp1m55s3o3Zi5o
-# ZwFKZ++vtQaWQVwhIbDxVu4AfvkTNnDzm3RVIUgEbERSdzBRPXvsNYKYeTzs8SDd
-# Kd2FyVQAiZqrmGTPlX7DjwVYQ4Wt0NQJ7WL5Z2VaYAppAGcDS8w2Pnkx16RDYvKL
-# eSSAOSAbdPXckNfWKG+ZtIVzNcoJ4nubbu0ng4gZffiFkz4kpRqU9Uw2V5dm82yb
-# Tg0QDzh0MoLQfhOZKtIdoUcHKS0jcY183ASLX0qDD1ZMuVCSbrD58D2FKiqW0FEG
-# 2lfMobqJc9Hy9dkDR8d/N33UGF7mbYlB+xpQ2SOOOwRROkDDvSCCnz5/jwl8OmRN
-# uPcy+o4woYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJAgEBMHcwYzELMAkGA1UE
+# AQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3DQEJBDEiBCAuPnOgguAQCB3LIVUT
+# WFvNC/sJn73LBdneSOaBfKRL1zANBgkqhkiG9w0BAQEFAASCAQB/N9PuJhfeEOSP
+# V67OtdtsSAF+lgbV1BoP0ISz6CyKkUgfOYrkdXlWfJVsdPcfWPOLMCni60CIN4dA
+# t5Ho/d5P+WAaLpHXOz2isqIDA/khTZjCB/okpRorTrp6FcjmW4D1ZH8V3Rh7a50b
+# vRybfkHAqe/JqVdpV0uV08TJvbdnFXDkPpuwP37S/CIJQI19UM3RgbhpaNb2Q9sn
+# 8driPIv5AaA/r2wuptbAP9mnLicoymv5Mvje5LYNnESmKsbN/d2QlD3EWknEoRPL
+# j9G04maCq/98YJAv0akRycC8Xztl/4oQxDiluqNJ6lqSkxm3Twjq/cLF145/dtEw
+# cleploY9oYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJAgEBMHcwYzELMAkGA1UE
 # BhMCVVMxFzAVBgNVBAoTDkRpZ2lDZXJ0LCBJbmMuMTswOQYDVQQDEzJEaWdpQ2Vy
 # dCBUcnVzdGVkIEc0IFJTQTQwOTYgU0hBMjU2IFRpbWVTdGFtcGluZyBDQQIQBUSv
 # 85SdCDmmv9s/X+VhFjANBglghkgBZQMEAgEFAKBpMBgGCSqGSIb3DQEJAzELBgkq
-# hkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDgxODA3MDYwM1owLwYJKoZIhvcN
-# AQkEMSIEIJLTjCAB01oSxfysA1BN7CtDnUwQ2pTnaOO/6y/04pA2MA0GCSqGSIb3
-# DQEBAQUABIICAJFp4cjCyKJU+e9RHJxojgfbDxNSAlxjEbGOQPZL2hNCz8XFepp4
-# zvI5/UXZKWRlvmNYfqVW4uEwCBkZ7wOECN31icOKddrFs/J/09OX9pqwoP7xdR7B
-# NQO+WKClwpmgAnsubRD+lecdHmvoXltd5pKb0N4EygLRiIJgdKEun/KvQr0ye2FN
-# pWyLAsCHGQLM2paUX4ZAW0ihXSlpjXdLoIxR2UCZEL2gl3+DKlAQDCPdu6qh0Pns
-# nFE/tBifrAAvCjMDnUJUojnR0+z+emNRYTRslb9Hb+adMZM6NjUrQkQp+e8i/oj3
-# q+AHxcStsBVZwCBKKMM5UzIpqMZ+a3yQ+WiV2tcWq+FvVNC0ExWmyDw9ZXa7sbpf
-# eEOqSW38dCE16T5EPVEUiNdkoY137yVYKypmgyrdpZ0PwHM/sliFZqfgIFhvJxZ6
-# i9p50aWxm5jSHpJpyVEpBRip0jvJBw1vMMbgMpj+BgWxPs0fWjO6oCJr/2POIbCS
-# Z82Kk5XoJcCeUc9iNCG5nA/SZTcRZ/lGV1h8pQv9W2C3shLSuputwthkNwVkmCK2
-# GLDl7EWWnRP/rC4WpldTajQn+ENKOV5O+CausjJ12ptJez7Qx0xaZIQHct24gf7t
-# gFTBiK5729TMvC6l3dBpfqs/8kcx0jMyM7UawSkO/qFEJwmXojacK2+p
+# hkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDgxODA3MzYxMFowLwYJKoZIhvcN
+# AQkEMSIEIJfHFeGGCJ5UH0GTjntUN1CZ4jZgbyqRSY4ufycfk8BvMA0GCSqGSIb3
+# DQEBAQUABIICAFfHxP4GycOeprFr6etQpC362bsGsIVNv/FC5/h8DfiwN9/qoN7t
+# HCgYKHPSfTf9f/IL5PnfhcUAAm4+quHJ5/DKPrYsoQBipkGgo2B19rkd074+nMZW
+# BOajAd3Ch0d3B3Sgqyl0Os2vlZBv+DxaQFSwZxf1TBZ9WmimZqRhIWNh5VwjJltj
+# syCYcnsTsIiGsFdanI8yn0NptLwErigA2lEB6q4b4e2PwDKJdK9RcP3Djo+03TLU
+# fxE/iZfy4/eLq+5tQQzAlZyqVCdjCfjTPVhsXmD2aVHoVsXosYDsO1GMF9C2RDIY
+# mKOrmLvy1NldLvXmw4UD9B4l9MLKLn+T5T6MnLQI69mwTJYkMO6X4kMsxfQKSbPZ
+# J+9qdrxhaCT6SHRpVjt7rU3b73AvF1yZCbsLghRRznFfU29djYKpMeOXShp3BqxZ
+# 4uMPz338uP2bQPfnsGDGAYqpJszWKZV71yjFcM0TapBn0y9to84pMzJ6OLRoIosK
+# 9MutjN+eQlbHrbX22RzgaeOrdjDmYGdV6/uiykNNe3PeIBn0Xqk6opFduUjreAsK
+# 94cx0H95V1RT4Qzy6vGlLVqOnLTMIO3YKNHGyQ4Sj1kCBYJ+iXyGexRGvqPFt7hr
+# IAj8hesbdnAtCQI2S3HKXPqRgTncGfs8cSCap+8J2dQRfzyLE/uv1uoM
 # SIG # End signature block

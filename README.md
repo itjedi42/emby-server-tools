@@ -25,6 +25,39 @@ Emby Server Management Script
 
 Installs and Updates Emby Server on Windows with IIS Reverse Proxy and SSL Certificate via Certify the Web.   
 
+What it does:
+- Checks if installation path exists, if not, creates it.    
+- Checks if 7-Zip is installed (needed to extract .7z archives of Emby Server), if its not present, it will get the latest version and install it.
+- Checks for NSSM in installation path, if not found, fetches it and gets it where it needs to be.   
+- Checks if Visual C++ 2015-2022 Redistributable Runtime is installed, if not it gets latest version and installs it.  
+- Checks if IIS is installed, if not, installs it and relevant features.   
+- Checks if IIS Rewrite2 Module is installed, if not, it downloads and installs it.      
+- Checks if IIS AAR3.0 Module is installed, if not, it downloads and installs it.   
+- Checks if Certify The Web client is installed, if not it downloads and installs it.    
+- Downloads latest .7z x64 version of Emby Server (will download latest beta if `-beta` is specified) and extracts it.   
+- Creates a local user to use as a service account to run Emby Server.    
+- Configures Emby Server to run as a service via NSSM.   
+- Configures Windows Firewall rule to allow TCP port `80` and `443` in and UDP `443` in (For TLS1.3/QUIC support).   
+- Stops the default IIS website.  
+- Creates a new `Emby Server Reverese Proxy` site.    
+- Configures IIS WebServer farm in AAR3.0.   
+- Configures IIS server variables.   
+- Disables IIS caching (causes weirdness with streaming).    
+- Configures IIS request filtering.   
+- Configures IIS headers.   
+- Configures rewrite/reverse proxy rules.   
+- Configures Certify the Web client to create and maintain SSL certificate.   
+- Disables OCSP stapling.   
+- Disables legacy TLS.   
+- Configures QUICK protocol and TLS 1.3 (if Windows Server 2022 or newer).   
+- Starts Emby Server as a Service.   
+- Launches Emby Server WebUI in the default system browser.   
+- Outputs credentials of created service account.   
+
+The script can also be used to update Emby Server when new versions are available.    
+
+
+
   <br>   
 
 ### Parameters (Install)   
@@ -58,7 +91,7 @@ Installs and Updates Emby Server on Windows with IIS Reverse Proxy and SSL Certi
 
 #### **-ExternalHostName**   
 > ![null](https://img.shields.io/badge/Type-String-blue?) ![null](https://img.shields.io/badge/Mandatory-True-red?)   
-> Hostname to configure reverse proxy to listen on   
+> Hostname to configure reverse proxy to listen on.  DO NOT INCLUDE `HTTPS://`!      
 
 #### **-CertificateContactName**   
 > ![null](https://img.shields.io/badge/Type-String-blue?) ![null](https://img.shields.io/badge/Mandatory-True-red?)   
