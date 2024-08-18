@@ -1134,6 +1134,8 @@ If ($Install.IsPresent)
         {
             $ServiceAccountSecret = $(New-Password -Length 16 -IncludeNumbers -IncludeSpecialCharacters -Segments 3)
             New-LocalUser -Name $ServiceAccount -Password (ConvertTo-SecureString $ServiceAccountSecre -AsPlainText -Force) -PasswordNeverExpires:$true -UserMayNotChangePassword:$true
+            icacls $InstallationPath /setowner "$ServiceAccount" /t /c
+            icacls $InstallationPath /grant "$($ServiceAccount):(OI)(CI)(F)" /t /c
         }
         Catch
         {
@@ -1243,6 +1245,7 @@ If ($Install.IsPresent)
         If (-Not (Test-Path -Path $reverseProxyPath))
         {
             New-Item -Path $reverseProxyPath -ItemType Directory
+            icacls $reverseProxyPath /grant "IIS_IUSRS:(OI)(CI)(M)" /t /c
             Write-Host "$($SuccessSlug) Created directory: $(Format-String -Color DarkOrange $reverseProxyPath)"
         }
         Else
@@ -1581,8 +1584,8 @@ If ($Update.IsPresent)
 # SIG # Begin signature block
 # MIIgBgYJKoZIhvcNAQcCoIIf9zCCH/MCAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCAQOiGlkFKrw6++
-# VQyFy6MfqDAltRsg0jyyFeYPEU1ikqCCGiUwggWNMIIEdaADAgECAhAOmxiO+dAt
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCBmhs5EQ2Qr4Gd1
+# 9xuGbFImRdEMnBhF9uF25VtoUSwjsaCCGiUwggWNMIIEdaADAgECAhAOmxiO+dAt
 # 5+/bUOIIQBhaMA0GCSqGSIb3DQEBDAUAMGUxCzAJBgNVBAYTAlVTMRUwEwYDVQQK
 # EwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xJDAiBgNV
 # BAMTG0RpZ2lDZXJ0IEFzc3VyZWQgSUQgUm9vdCBDQTAeFw0yMjA4MDEwMDAwMDBa
@@ -1726,28 +1729,28 @@ If ($Update.IsPresent)
 # ARkWB2ZlbHRvbnMxGzAZBgNVBAMTEkZlbHRvbnMuTWUgUm9vdCBDQQITQQAAAHEf
 # mpXWr8phQwAAAAAAcTANBglghkgBZQMEAgEFAKCBhDAYBgorBgEEAYI3AgEMMQow
 # CKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQBgjcC
-# AQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3DQEJBDEiBCAuPnOgguAQCB3LIVUT
-# WFvNC/sJn73LBdneSOaBfKRL1zANBgkqhkiG9w0BAQEFAASCAQB/N9PuJhfeEOSP
-# V67OtdtsSAF+lgbV1BoP0ISz6CyKkUgfOYrkdXlWfJVsdPcfWPOLMCni60CIN4dA
-# t5Ho/d5P+WAaLpHXOz2isqIDA/khTZjCB/okpRorTrp6FcjmW4D1ZH8V3Rh7a50b
-# vRybfkHAqe/JqVdpV0uV08TJvbdnFXDkPpuwP37S/CIJQI19UM3RgbhpaNb2Q9sn
-# 8driPIv5AaA/r2wuptbAP9mnLicoymv5Mvje5LYNnESmKsbN/d2QlD3EWknEoRPL
-# j9G04maCq/98YJAv0akRycC8Xztl/4oQxDiluqNJ6lqSkxm3Twjq/cLF145/dtEw
-# cleploY9oYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJAgEBMHcwYzELMAkGA1UE
+# AQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3DQEJBDEiBCBdyDy/Ki8oguW/OGrT
+# VPIYs0RMzsfDzcoeHgSkERrwTDANBgkqhkiG9w0BAQEFAASCAQBUI/znatepYHkL
+# lZzKdCxQ+VxNVcVtb3vUjs7WP0Ix4YRWUlrd8XUhrBR/Kk+vRVpMdzY390mJ3+FT
+# d8owub8G1rAvYKwmU1xR1s8+uGYn+LCUL60ZLvT3usg6cgDBdFuo0gDeXr4S6J7q
+# /u8CX2u9Vw1IL1vUWdak+qBI2nj1atRJ0BeAWbEtPcTYgutA414zAmfvrXEyrD6f
+# ppqlLkKq8nWwjDDtMu2TOBDC/+L4YSTdrX8yY4jHete+9mYcN93hsGRLLGhQuWw+
+# 6VldmUO/xvr7kJXXeYjqfSnFlWmCsbCogUMBjIfGLKopL4VoT29Qjifq01G3cxDO
+# y40ZuS5BoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJAgEBMHcwYzELMAkGA1UE
 # BhMCVVMxFzAVBgNVBAoTDkRpZ2lDZXJ0LCBJbmMuMTswOQYDVQQDEzJEaWdpQ2Vy
 # dCBUcnVzdGVkIEc0IFJTQTQwOTYgU0hBMjU2IFRpbWVTdGFtcGluZyBDQQIQBUSv
 # 85SdCDmmv9s/X+VhFjANBglghkgBZQMEAgEFAKBpMBgGCSqGSIb3DQEJAzELBgkq
-# hkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDgxODA3MzYxMFowLwYJKoZIhvcN
-# AQkEMSIEIJfHFeGGCJ5UH0GTjntUN1CZ4jZgbyqRSY4ufycfk8BvMA0GCSqGSIb3
-# DQEBAQUABIICAFfHxP4GycOeprFr6etQpC362bsGsIVNv/FC5/h8DfiwN9/qoN7t
-# HCgYKHPSfTf9f/IL5PnfhcUAAm4+quHJ5/DKPrYsoQBipkGgo2B19rkd074+nMZW
-# BOajAd3Ch0d3B3Sgqyl0Os2vlZBv+DxaQFSwZxf1TBZ9WmimZqRhIWNh5VwjJltj
-# syCYcnsTsIiGsFdanI8yn0NptLwErigA2lEB6q4b4e2PwDKJdK9RcP3Djo+03TLU
-# fxE/iZfy4/eLq+5tQQzAlZyqVCdjCfjTPVhsXmD2aVHoVsXosYDsO1GMF9C2RDIY
-# mKOrmLvy1NldLvXmw4UD9B4l9MLKLn+T5T6MnLQI69mwTJYkMO6X4kMsxfQKSbPZ
-# J+9qdrxhaCT6SHRpVjt7rU3b73AvF1yZCbsLghRRznFfU29djYKpMeOXShp3BqxZ
-# 4uMPz338uP2bQPfnsGDGAYqpJszWKZV71yjFcM0TapBn0y9to84pMzJ6OLRoIosK
-# 9MutjN+eQlbHrbX22RzgaeOrdjDmYGdV6/uiykNNe3PeIBn0Xqk6opFduUjreAsK
-# 94cx0H95V1RT4Qzy6vGlLVqOnLTMIO3YKNHGyQ4Sj1kCBYJ+iXyGexRGvqPFt7hr
-# IAj8hesbdnAtCQI2S3HKXPqRgTncGfs8cSCap+8J2dQRfzyLE/uv1uoM
+# hkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDgxODA4MDIzMlowLwYJKoZIhvcN
+# AQkEMSIEIPQwA4NlIbqEEztX+sw6et/qCw4GrD0MBNEViXxHYyjjMA0GCSqGSIb3
+# DQEBAQUABIICAFls5UWCkZZnxEq6dAeFFVCSD/ZfJDOLoh9t10j91f+RpI9rZRQ1
+# D162/jeQVAXwNRmfOhcSFxK4dQzwyfSbYDs7Ygh21FURsJ08V2sFsEjH3+mKgG6q
+# q5xNyUDlnHbvafWRosCAg978zadpCHCOcCmpo8zRP/Ri6PYGBBjzW5jHaC/umcDl
+# pM0fm48wGAQF7Ccetz+c8/2R9mHUc/gb/QR5NJ3t7sCFRYzkcjj1g8E7FZpIdH93
+# 0N/86LCED2PXT4YxDMUjMchqEL2JdhicPOXCPSpeN0U3bRm4RAo81VkcoW4sRjlH
+# 35XTw7S+mCiVH9P4RvyRIBDBoGSXB85Ul91MoReKa2GUcvhojd1kPXN21egV3N/n
+# UFZzohC7mdwWY6MT2Z9v01odpUQZBrbD4pDecxgt+aJKQ96Cviw7naw8HMhN/NZR
+# mfH07amg3ZIlDZxRt3NVj7FvRuw8mNY1y+BtzCzrLNtTQnLL+LdVOiIMUKhCLFnn
+# 8/3a6FA/X86Kd54Lm9YgudwFI9mnSAarfxtIOS6yAkL6EXdnznepei5tGrBgIPb2
+# qytgRDu0k6oolY+utcA/VYxvfUPFFNFN8fsFZRchS4I4P2i6iJKZCk+7narOuTfd
+# 6qMjoZ44UNgc+XQphP2JGP4Vw6br+LUl6/RLz8lWRe9VNvoTkPGajhbH
 # SIG # End signature block
